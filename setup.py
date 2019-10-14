@@ -29,17 +29,17 @@
 # 
 ##############################################################################
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name='OdooLocust',
-      version='1.1.0',
-      description='Easily load test Odoo using Locust and odoolib.',
+      version='1.1.1',
+      description='Easily load test Odoo using Locust and odoorpc.',
       author='Nicolas Seinlet',
       author_email='',
       url='',
       packages=["OdooLocust"],
       install_requires=[
-          'odoo-client-lib',
+          'odoorpc',
           'locustio',
           'locust',
       ],

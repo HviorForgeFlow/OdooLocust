@@ -16,17 +16,6 @@ To load test Odoo, you create tasks sets like you'll have done it with Locust:
 from locust import task, TaskSet
 
 class SellerTaskSet(TaskSet):
-    @task(10)
-    def read_partners(self):
-        cust_model = self.client.get_model('res.partner')
-        cust_ids = cust_model.search([])
-        prtns = cust_model.read(cust_ids)
-        
-    @task(5)
-    def read_products(self):
-        prod_model = self.client.get_model('product.product')
-        ids = prod_model.search([])
-        prods = prod_model.read(ids)
         
     @task(20)
     def create_so(self):

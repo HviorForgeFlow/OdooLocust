@@ -28,33 +28,35 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 ##############################################################################
-import odoolib
+import odoorpc
 import time
 import sys
 
 from locust import Locust, events
 
 
-def send(self, service_name, method, *args):
-    if service_name == "object" and method == "execute_kw":
-        call_name = "%s : %s" % args[3:5]
+def json(self, url, params):
+    if params.get('service', False) and params.get('method', False):
+        if params['service'] == "object" and 'execute' in params['method']:
+            call_name = ': '.join(params['args'][3:5])
+        else:
+            call_name = '%s : %s' % (params['service'], params['method'])
     else:
-        call_name = '%s : %s' % (service_name, method)
+        call_name = ': '.join([param for param in params])
     start_time = time.time()
     try:
-        res = odoolib.json_rpc(self.url, "call", {"service": service_name, "method": method, "args": args})
+        data = self._connector.proxy_json(url, params)
     except Exception as e:
         total_time = int((time.time() - start_time) * 1000)
-        events.request_failure.fire(request_type="Odoo JsonRPC", name=call_name, response_time=total_time, exception=e)
+        events.request_failure.fire(request_type="OdooRPC", name=call_name, response_time=total_time, exception=e)
         raise e
     else:
         total_time = int((time.time() - start_time) * 1000)
-        events.request_success.fire(request_type="Odoo JsonRPC", name=call_name, response_time=total_time, response_length=sys.getsizeof(res))
-    return res
+        events.request_success.fire(request_type="OdooRPC", name=call_name, response_time=total_time, response_length=sys.getsizeof(data))
+    return data
 
 
-odoolib.JsonRPCConnector.send = send
-odoolib.JsonRPCSConnector.send = send
+odoorpc.ODOO.json = json
 
 
 class OdooLocust(Locust):
@@ -63,21 +65,15 @@ class OdooLocust(Locust):
     login = "admin"
     password = "admin"
     protocol = "jsonrpc"
-    user_id = -1
 
     def __init__(self):
         super(OdooLocust, self).__init__()
         self._connect()
 
     def _connect(self):
-        user_id = None
-        if self.user_id and self.user_id > 0:
-            user_id = self.user_id
-        self.client = odoolib.get_connection(hostname=self.host,
-                                             port=self.port,
-                                             database=self.database,
-                                             login=self.login,
-                                             password=self.password,
-                                             protocol=self.protocol,
-                                             user_id=user_id)
-        self.client.check_login(force=False)
+        try:
+            self.client = odoorpc.ODOO(self.host, port=self.port, protocol=self.protocol)
+            self.client.login(self.database, self.login, self.password)
+        except Exception as e:
+            raise e
+
