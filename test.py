@@ -1,17 +1,19 @@
-from locust import task, TaskSet
+from locust import task
+from OdooLocust.OdooRPCTaskSet import OdooRPCTaskSet
 from OdooLocust import OdooLocust
 from datetime import datetime
 
 
-class PurchaseTaskSet(TaskSet):
-      
+class PurchaseTaskSet(OdooRPCTaskSet):
+
+
     @task(20)
     def create_purchase(self):
-        product = self.client.env.ref('product.product_product_4')
-        partner = self.client.env.ref('base.res_partner_1')
+        product = self.env.ref('product.product_product_4')
+        partner = self.env.ref('base.res_partner_1')
         date = datetime.today().strftime('%Y-%m-%d')
         quantity = 1.0
-        rslt = self.client.env['purchase.order'].create({
+        rslt = self.env['purchase.order'].create({
             'partner_id': partner.id,
             'order_line': [
                 (0, 0, {
@@ -24,7 +26,7 @@ class PurchaseTaskSet(TaskSet):
                 })],
             'date_order': date,
         })
-        self.client.env['purchase.order'].browse(rslt).button_confirm()
+        self.env['purchase.order'].browse(rslt).button_confirm()
 
 
 class Purchaser(OdooLocust.OdooLocust):

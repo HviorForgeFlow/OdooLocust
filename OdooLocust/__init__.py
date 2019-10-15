@@ -31,3 +31,4 @@
 ##############################################################################
 
 from . import OdooLocust
+from . import OdooRPCTaskSet

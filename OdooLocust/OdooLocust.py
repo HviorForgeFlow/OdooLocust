@@ -76,4 +76,3 @@ class OdooLocust(Locust):
             self.client.login(self.database, self.login, self.password)
         except Exception as e:
             raise e
-
